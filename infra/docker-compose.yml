@@ -1,6 +1,6 @@
-version: "3.8"
+version: "3.9"
 services:
-  db:
+  postgres:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
@@ -8,27 +8,22 @@ services:
       POSTGRES_DB: casemgr
     ports:
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+
+  trade-ingest:
+    build: ../trade-ingest
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/casemgr
+      - ALERT_THRESHOLD=100000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
 
   case-manager:
     build: ../case-manager
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/casemgr
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/casemgr
     ports:
       - "8081:8081"
     depends_on:
-      - db
-
-  app:
-    build: .
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/casemgr
-      ALERT_THRESHOLD: 100000
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-
-volumes:
-  pgdata:
+      - postgres
