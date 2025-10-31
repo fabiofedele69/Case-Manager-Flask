@@ -1,59 +1,40 @@
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from models import db, Case
-import os
-import uuid
-import datetime
-
-DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/casemgr")
+import psycopg2, os
+from models import init_db
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/casemgr")
 
-db.init_app(app)
+init_db(DB_URL)
 
-with app.app_context():
-    db.create_all()
+@app.route("/cases", methods=["POST"])
+def create_case():
+    data = request.json
+    conn = psycopg2.connect(DB_URL)
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO cases (trade_id, description, status) VALUES (%s, %s, %s) RETURNING id",
+        (data["trade_id"], data["description"], "OPEN"),
+    )
+    case_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"case_id": case_id, "status": "created"}), 201
+
+@app.route("/cases", methods=["GET"])
+def list_cases():
+    conn = psycopg2.connect(DB_URL)
+    cur = conn.cursor()
+    cur.execute("SELECT id, trade_id, description, status FROM cases")
+    cases = [{"id": r[0], "trade_id": r[1], "description": r[2], "status": r[3]} for r in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify(cases)
 
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"}), 200
-
-@app.route("/cases", methods=["GET"])
-def get_cases():
-    cases = Case.query.all()
-    return jsonify([c.to_dict() for c in cases]), 200
-
-@app.route("/cases", methods=["POST"])
-def create_case():
-    payload = request.get_json()
-    case = Case(
-        id=str(uuid.uuid4()),
-        trade_id=payload.get("trade_id"),
-        description=payload.get("description", "No description provided"),
-        status="OPEN",
-        created_at=datetime.datetime.utcnow(),
-    )
-    db.session.add(case)
-    db.session.commit()
-    return jsonify(case.to_dict()), 201
-
-@app.route("/cases/<case_id>", methods=["PATCH"])
-def update_case(case_id):
-    case = Case.query.get(case_id)
-    if not case:
-        return jsonify({"error": "Case not found"}), 404
-
-    payload = request.get_json()
-    if "status" in payload:
-        case.status = payload["status"]
-    if "description" in payload:
-        case.description = payload["description"]
-
-    case.updated_at = datetime.datetime.utcnow()
-    db.session.commit()
-    return jsonify(case.to_dict()), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8081)
