@@ -1,0 +1,8 @@
+kind: provider
+name: kubernetes
+commands:
+  up:
+    - description: "Start workspace on Kubernetes"
+      command: ["devpod", "up"]
+options:
+  pod_manifest_template: ./pod_manifest_template.yaml
