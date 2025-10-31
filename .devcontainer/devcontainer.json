@@ -1,10 +1,10 @@
 {
-  "name": "banking-case-manager",
-  "image": "python:3.11-bullseye",
-  "workspaceFolder": "/workspace",
-  "extensions": [
-    "ms-python.python",
-    "ms-azuretools.vscode-docker"
-  ],
-  "postCreateCommand": "pip install -r requirements-dev.txt"
+  "name": "Banking Case Manager DevPod",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "pip install -r trade-ingest/requirements.txt && pip install -r case-manager/requirements.txt",
+  "forwardPorts": [8080, 8081],
+  "remoteUser": "vscode"
 }
