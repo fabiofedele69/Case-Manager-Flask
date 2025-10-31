@@ -1,23 +1,22 @@
-from flask_sqlalchemy import SQLAlchemy
-import datetime
+import psycopg2
 
-db = SQLAlchemy()
-
-class Case(db.Model):
-    __tablename__ = "cases"
-    id = db.Column(db.String, primary_key=True)
-    trade_id = db.Column(db.String, nullable=False)
-    description = db.Column(db.String)
-    status = db.Column(db.String, default="OPEN")
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=datetime.datetime.utcnow)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "trade_id": self.trade_id,
-            "description": self.description,
-            "status": self.status,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
+def init_db(db_url):
+    conn = psycopg2.connect(db_url)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS cases (
+            id SERIAL PRIMARY KEY,
+            trade_id VARCHAR(50),
+            description TEXT,
+            status VARCHAR(20)
+        );
+        CREATE TABLE IF NOT EXISTS trades (
+            trade_id VARCHAR(50) PRIMARY KEY,
+            instrument VARCHAR(50),
+            amount NUMERIC,
+            currency VARCHAR(10)
+        );
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
