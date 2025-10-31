@@ -1,0 +1,13 @@
+replicaCount: 2
+
+image:
+  repository: myregistry.azurecr.io/case-manager
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8081
+
+env:
+  DATABASE_URL: "postgresql://postgres:postgres@postgres-service:5432/casemgr"
