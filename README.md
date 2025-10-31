@@ -2,6 +2,9 @@
 
 # 🏦 Banking Case Manager Application
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/7eade681-5b50-4adb-8f2e-9aaa7681db35" />
+
+
 Flask-based microservice system for monitoring trades and generating alerts.
 
 ## Features
