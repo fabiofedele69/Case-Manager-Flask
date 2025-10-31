@@ -1,0 +1,10 @@
+{
+  "name": "banking-case-manager",
+  "image": "python:3.11-bullseye",
+  "workspaceFolder": "/workspace",
+  "extensions": [
+    "ms-python.python",
+    "ms-azuretools.vscode-docker"
+  ],
+  "postCreateCommand": "pip install -r requirements-dev.txt"
+}
